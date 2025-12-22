@@ -1,0 +1,55 @@
+declare global {
+	interface Window {
+		Clerk?: {
+			session?: {
+				getToken: () => Promise<string | null>
+			}
+		}
+	}
+}
+
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
+
+export async function fetcher<T>(path: string): Promise<T> {
+	const token = await window.Clerk?.session?.getToken()
+
+	const res = await fetch(`${API_URL}${path}`, {
+		headers: {
+			'Content-Type': 'application/json',
+			...(token ? { Authorization: `Bearer ${token}` } : {}),
+		},
+	})
+
+	if (!res.ok) {
+		const error = await res.json().catch(() => ({ error: { message: 'Request failed' } }))
+		throw new Error(error.error?.message ?? 'Request failed')
+	}
+
+	const data = await res.json()
+	return data.data
+}
+
+export async function apiRequest<T>(
+	path: string,
+	options?: RequestInit & { json?: unknown }
+): Promise<T> {
+	const token = await window.Clerk?.session?.getToken()
+
+	const res = await fetch(`${API_URL}${path}`, {
+		...options,
+		headers: {
+			'Content-Type': 'application/json',
+			...(token ? { Authorization: `Bearer ${token}` } : {}),
+			...options?.headers,
+		},
+		body: options?.json ? JSON.stringify(options.json) : options?.body,
+	})
+
+	if (!res.ok) {
+		const error = await res.json().catch(() => ({ error: { message: 'Request failed' } }))
+		throw new Error(error.error?.message ?? 'Request failed')
+	}
+
+	const data = await res.json()
+	return data.data
+}
