@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test'
+import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { Hono } from 'hono'
 import { type AuthVariables, authMiddleware, getAuth } from './auth.js'
 
@@ -60,6 +60,21 @@ describe('Auth Middleware', () => {
 	})
 
 	describe('Invalid Token', () => {
+		let originalKey: string | undefined
+
+		beforeAll(() => {
+			originalKey = process.env['CLERK_SECRET_KEY']
+			process.env['CLERK_SECRET_KEY'] = 'sk_test_fake_key_for_testing'
+		})
+
+		afterAll(() => {
+			if (originalKey) {
+				process.env['CLERK_SECRET_KEY'] = originalKey
+			} else {
+				delete process.env['CLERK_SECRET_KEY']
+			}
+		})
+
 		test('rejects invalid JWT token', async () => {
 			const res = await app.request('/protected', {
 				headers: { Authorization: 'Bearer invalid.jwt.token' },
