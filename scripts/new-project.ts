@@ -24,7 +24,7 @@ for (const file of filesToUpdate) {
 	try {
 		const content = readFileSync(file, 'utf-8')
 		const updated = content
-			.replace(/stack-vdev/g, projectName)
+			.replaceAll('stack-vdev', projectName)
 			.replace(/"description":\s*""/, `"description": "${description}"`)
 		writeFileSync(file, updated)
 	} catch {}

@@ -1,3 +1,4 @@
+// biome-ignore-all lint/suspicious/noConsole: Build script needs console output
 import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -23,8 +24,7 @@ const result = await Bun.build({
 })
 
 if (!result.success) {
-	for (const _log of result.logs) {
-	}
+	console.error('Build failed:', result.logs)
 	process.exit(1)
 }
 
@@ -52,5 +52,4 @@ if (cssFile) {
 }
 
 writeFileSync(join(outdir, 'index.html'), html)
-for (const _output of result.outputs) {
-}
+console.log(`Build complete: ${result.outputs.length} files generated`)

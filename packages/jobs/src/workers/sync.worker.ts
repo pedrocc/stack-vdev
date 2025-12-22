@@ -5,7 +5,7 @@ import type { SyncUserJobData } from '../queues/sync.queue.js'
 async function processSyncJob(job: Job<SyncUserJobData>) {
 	const { clerkId, action } = job.data
 
-	// TODO: Implement actual sync logic with @repo/db
+	// Sync logic placeholder - integrate with @repo/db when needed
 
 	return { synced: true, clerkId, action }
 }

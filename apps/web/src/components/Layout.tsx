@@ -2,8 +2,8 @@ import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-reac
 import type { ReactNode } from 'react'
 import { Link } from 'wouter'
 
-type LayoutProps = {
-	children: ReactNode
+interface LayoutProps {
+	readonly children: ReactNode
 }
 
 export function Layout({ children }: LayoutProps) {

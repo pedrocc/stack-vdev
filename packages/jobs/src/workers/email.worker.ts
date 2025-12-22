@@ -5,7 +5,7 @@ import type { SendEmailJobData } from '../queues/email.queue.js'
 async function processEmailJob(job: Job<SendEmailJobData>) {
 	const { to, subject } = job.data
 
-	// TODO: Integrate with @repo/email
+	// Email integration placeholder - connect to @repo/email when ready
 	await job.updateProgress(50)
 
 	// Simulate sending

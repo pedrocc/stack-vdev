@@ -1,9 +1,7 @@
-declare global {
-	interface Window {
-		Clerk?: {
-			session?: {
-				getToken: () => Promise<string | null>
-			}
+interface ClerkGlobal {
+	Clerk?: {
+		session?: {
+			getToken: () => Promise<string | null>
 		}
 	}
 }
@@ -11,7 +9,7 @@ declare global {
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
 
 export async function fetcher<T>(path: string): Promise<T> {
-	const token = await window.Clerk?.session?.getToken()
+	const token = await (globalThis as unknown as ClerkGlobal).Clerk?.session?.getToken()
 
 	const res = await fetch(`${API_URL}${path}`, {
 		headers: {
@@ -33,7 +31,7 @@ export async function apiRequest<T>(
 	path: string,
 	options?: RequestInit & { json?: unknown }
 ): Promise<T> {
-	const token = await window.Clerk?.session?.getToken()
+	const token = await (globalThis as unknown as ClerkGlobal).Clerk?.session?.getToken()
 
 	const res = await fetch(`${API_URL}${path}`, {
 		...options,

@@ -1,7 +1,8 @@
+// biome-ignore-all lint/suspicious/noConsole: Seed script needs console output
 import { db } from '../client.js'
 import { users } from '../schema/index.js'
 
-async function seed() {
+try {
 	await db
 		.insert(users)
 		.values([
@@ -19,8 +20,9 @@ async function seed() {
 			},
 		])
 		.onConflictDoNothing()
+	console.log('Seed completed successfully')
+} catch (error) {
+	console.error('Seed failed:', error)
+} finally {
+	process.exit(0)
 }
-
-seed()
-	.catch(console.error)
-	.finally(() => process.exit(0))
