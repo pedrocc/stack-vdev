@@ -20,6 +20,8 @@ const result = await Bun.build({
 	},
 	define: {
 		'process.env.NODE_ENV': '"production"',
+		__API_URL__: JSON.stringify(process.env['API_URL'] || '/api'),
+		__CLERK_PUBLISHABLE_KEY__: JSON.stringify(process.env['CLERK_PUBLISHABLE_KEY'] || ''),
 	},
 })
 

@@ -1,32 +1,30 @@
-import { spawn } from 'bun'
+import { spawn, spawnSync } from 'bun'
 
 const DEFAULT_API_PORT = 3000
 const DEFAULT_WEB_PORT = 5173
 
-async function isPortAvailable(port: number): Promise<boolean> {
-	try {
-		const server = Bun.serve({
-			port,
-			fetch() {
-				return new Response()
-			},
-		})
-		server.stop()
-		return true
-	} catch {
-		return false
+// Kill any process using a specific port
+function killProcessOnPort(port: number): void {
+	const result = spawnSync(['lsof', '-i', `:${port}`, '-t'], {
+		stdout: 'pipe',
+		stderr: 'pipe',
+	})
+	const pids = result.stdout.toString().trim()
+	if (pids) {
+		for (const pid of pids.split('\n')) {
+			if (pid) {
+				spawnSync(['kill', '-9', pid], { stdout: 'pipe', stderr: 'pipe' })
+			}
+		}
 	}
 }
 
-async function findAvailablePort(startPort: number): Promise<number> {
-	let port = startPort
-	while (!(await isPortAvailable(port))) {
-		port++
-		if (port > startPort + 100) {
-			throw new Error(`Não foi possível encontrar porta disponível a partir de ${startPort}`)
-		}
-	}
-	return port
+// Ensure default ports are free before starting
+function ensurePortsFree(): void {
+	killProcessOnPort(DEFAULT_API_PORT)
+	killProcessOnPort(DEFAULT_WEB_PORT)
+	// Small delay to ensure ports are released
+	Bun.sleepSync(500)
 }
 
 const processes: ReturnType<typeof spawn>[] = []
@@ -41,16 +39,11 @@ function cleanup() {
 process.on('SIGINT', cleanup)
 process.on('SIGTERM', cleanup)
 
-// Find available ports
-const apiPort = await findAvailablePort(DEFAULT_API_PORT)
-const webPort = await findAvailablePort(DEFAULT_WEB_PORT)
+// Kill any existing processes on the default ports
+ensurePortsFree()
 
-if (apiPort !== DEFAULT_API_PORT) {
-	console.log(`⚠️  Porta ${DEFAULT_API_PORT} ocupada, usando porta ${apiPort} para API`)
-}
-if (webPort !== DEFAULT_WEB_PORT) {
-	console.log(`⚠️  Porta ${DEFAULT_WEB_PORT} ocupada, usando porta ${webPort} para Web`)
-}
+const apiPort = DEFAULT_API_PORT
+const webPort = DEFAULT_WEB_PORT
 
 console.log(`🚀 Iniciando API em http://localhost:${apiPort}`)
 console.log(`🌐 Iniciando Web em http://localhost:${webPort}`)
@@ -77,6 +70,7 @@ const web = spawn({
 		...process.env,
 		PORT: String(webPort),
 		API_URL: `http://localhost:${apiPort}`,
+		CLERK_PUBLISHABLE_KEY: process.env['CLERK_PUBLISHABLE_KEY'] || '',
 	},
 })
 processes.push(web)

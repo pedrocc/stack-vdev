@@ -1,35 +1,15 @@
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { extname, join } from 'node:path'
-import homepage from '../index.html'
 
-const DEFAULT_PORT = Number(process.env['PORT']) || 5173
-const API_URL = process.env['API_URL'] || 'http://localhost:3000'
+const homepage = readFileSync('./index.html', 'utf-8')
 
-async function isPortAvailable(port: number): Promise<boolean> {
-	try {
-		const server = Bun.serve({
-			port,
-			fetch() {
-				return new Response()
-			},
-		})
-		server.stop()
-		return true
-	} catch {
-		return false
-	}
-}
+// Port is determined by scripts/dev.ts and passed via PORT env var
+const PORT = Number(process.env['PORT']) || 5173
+const API_URL = process.env['API_URL'] || '/api'
+const CLERK_KEY = process.env['CLERK_PUBLISHABLE_KEY'] || ''
 
-async function findAvailablePort(startPort: number): Promise<number> {
-	let port = startPort
-	while (!(await isPortAvailable(port))) {
-		port++
-		if (port > startPort + 100) {
-			throw new Error(`Não foi possível encontrar porta disponível a partir de ${startPort}`)
-		}
-	}
-	return port
-}
+// biome-ignore lint/suspicious/noConsole: Startup info
+console.log(`🔧 Config: API_URL=${API_URL}, CLERK_KEY=${CLERK_KEY ? 'loaded' : 'MISSING!'}`)
 
 const MIME_TYPES: Record<string, string> = {
 	'.html': 'text/html',
@@ -122,42 +102,37 @@ async function serveTypeScript(filePath: string): Promise<Response | null> {
 		minify: false,
 		define: {
 			'process.env.NODE_ENV': '"development"',
-			'import.meta.env.VITE_CLERK_PUBLISHABLE_KEY': JSON.stringify(
-				process.env['CLERK_PUBLISHABLE_KEY'] || ''
-			),
-			'import.meta.env.VITE_API_URL': JSON.stringify(API_URL),
+			__CLERK_PUBLISHABLE_KEY__: JSON.stringify(CLERK_KEY),
+			__API_URL__: JSON.stringify(API_URL),
 		},
 	})
 
 	if (result.success && result.outputs[0]) {
 		const code = await result.outputs[0].text()
-		return new Response(code, {
-			headers: { 'Content-Type': 'text/javascript' },
-		})
+		const headers = new Headers()
+		headers.set('Content-Type', 'text/javascript')
+		headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+		headers.set('Pragma', 'no-cache')
+		headers.set('Expires', '0')
+		return new Response(code, { headers })
 	}
 	return null
-}
-
-const PORT = await findAvailablePort(DEFAULT_PORT)
-
-if (PORT !== DEFAULT_PORT) {
-	console.log(`⚠️  Porta ${DEFAULT_PORT} ocupada, usando porta ${PORT}`)
 }
 
 console.log(`🌐 Web server: http://localhost:${PORT}`)
 
 const _server = Bun.serve({
 	port: PORT,
-	development: {
-		hmr: true,
-		console: true,
-	},
-	routes: {
-		'/': homepage,
-	},
 	async fetch(req) {
 		const url = new URL(req.url)
 		const pathname = url.pathname
+
+		// Serve index.html for root
+		if (pathname === '/') {
+			return new Response(homepage, {
+				headers: { 'Content-Type': 'text/html' },
+			})
+		}
 
 		if (pathname.startsWith('/api/') || pathname.startsWith('/health')) {
 			return proxyApiRequest(req, pathname, url.search)
