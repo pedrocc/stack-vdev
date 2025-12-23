@@ -103,5 +103,5 @@ jobs:
       - name: Build Web
         run: bun run --filter @repo/web build
         env:
-          VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
-          VITE_API_URL: ${{ vars.API_URL || 'http://localhost:3000' }}
+          CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+          API_URL: ${{ vars.API_URL || 'http://localhost:3000' }}
