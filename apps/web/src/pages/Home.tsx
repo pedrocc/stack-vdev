@@ -4,7 +4,7 @@ import { Link } from 'wouter'
 export function HomePage() {
 	return (
 		<div className="py-12 text-center">
-			<h1 className="text-4xl font-bold tracking-tight text-gray-900">Welcome to Stack VDev</h1>
+			<h1 className="text-4xl font-bold tracking-tight text-gray-900">Welcome to Stack VDev!</h1>
 			<p className="mt-4 text-lg text-gray-600">
 				A monorepo template with Bun, Hono, React, and more.
 			</p>

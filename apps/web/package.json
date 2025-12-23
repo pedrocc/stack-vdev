@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun --watch src/dev-server.ts",
+    "dev": "bun --env-file=../../.env --watch src/dev-server.ts",
     "build": "bun run build.ts",
     "preview": "bun run dist/index.js",
     "typecheck": "tsc --noEmit",
@@ -23,10 +23,11 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
+    "@tailwindcss/cli": "^4.1.18",
     "@types/bun": "latest",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "typescript": "^5.8.0",
-    "tailwindcss": "^4.1.0"
+    "tailwindcss": "^4.1.0",
+    "typescript": "^5.8.0"
   }
 }

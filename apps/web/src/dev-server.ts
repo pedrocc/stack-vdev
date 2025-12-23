@@ -1,8 +1,35 @@
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { extname, join } from 'node:path'
+import homepage from '../index.html'
 
-const PORT = Number(process.env['PORT']) || 5173
+const DEFAULT_PORT = Number(process.env['PORT']) || 5173
 const API_URL = process.env['API_URL'] || 'http://localhost:3000'
+
+async function isPortAvailable(port: number): Promise<boolean> {
+	try {
+		const server = Bun.serve({
+			port,
+			fetch() {
+				return new Response()
+			},
+		})
+		server.stop()
+		return true
+	} catch {
+		return false
+	}
+}
+
+async function findAvailablePort(startPort: number): Promise<number> {
+	let port = startPort
+	while (!(await isPortAvailable(port))) {
+		port++
+		if (port > startPort + 100) {
+			throw new Error(`Não foi possível encontrar porta disponível a partir de ${startPort}`)
+		}
+	}
+	return port
+}
 
 const MIME_TYPES: Record<string, string> = {
 	'.html': 'text/html',
@@ -50,9 +77,38 @@ async function proxyApiRequest(req: Request, pathname: string, search: string): 
 function serveStaticFile(filePath: string): Response {
 	const ext = extname(filePath)
 	const contentType = MIME_TYPES[ext] || 'application/octet-stream'
-	return new Response(readFileSync(filePath), {
+	return new Response(Bun.file(filePath), {
 		headers: { 'Content-Type': contentType },
 	})
+}
+
+// Cache for compiled Tailwind CSS
+let tailwindCache: { css: string; mtime: number } | null = null
+
+async function compileTailwindCSS(filePath: string): Promise<string | null> {
+	const stat = Bun.file(filePath)
+	const mtime = (await stat.stat()).mtime.getTime()
+
+	if (tailwindCache && tailwindCache.mtime === mtime) {
+		return tailwindCache.css
+	}
+
+	const proc = Bun.spawn(['bunx', 'tailwindcss', '-i', filePath], {
+		stdout: 'pipe',
+		stderr: 'pipe',
+	})
+
+	const output = await new Response(proc.stdout).text()
+	const error = await new Response(proc.stderr).text()
+	const exitCode = await proc.exited
+
+	if (exitCode !== 0) {
+		console.error('Tailwind compilation error:', error)
+		return null
+	}
+
+	tailwindCache = { css: output, mtime }
+	return output
 }
 
 async function serveTypeScript(filePath: string): Promise<Response | null> {
@@ -82,8 +138,23 @@ async function serveTypeScript(filePath: string): Promise<Response | null> {
 	return null
 }
 
+const PORT = await findAvailablePort(DEFAULT_PORT)
+
+if (PORT !== DEFAULT_PORT) {
+	console.log(`⚠️  Porta ${DEFAULT_PORT} ocupada, usando porta ${PORT}`)
+}
+
+console.log(`🌐 Web server: http://localhost:${PORT}`)
+
 const _server = Bun.serve({
 	port: PORT,
+	development: {
+		hmr: true,
+		console: true,
+	},
+	routes: {
+		'/': homepage,
+	},
 	async fetch(req) {
 		const url = new URL(req.url)
 		const pathname = url.pathname
@@ -102,15 +173,33 @@ const _server = Bun.serve({
 			if (response) return response
 		}
 
+		// Handle .js imports by mapping to .ts/.tsx files
+		if (pathname.endsWith('.js')) {
+			const basePath = join('.', pathname.slice(0, -3))
+			for (const ext of ['.tsx', '.ts']) {
+				const tsPath = basePath + ext
+				if (existsSync(tsPath)) {
+					const response = await serveTypeScript(tsPath)
+					if (response) return response
+				}
+			}
+		}
+
 		if (pathname.endsWith('.css')) {
 			const filePath = join('.', pathname)
 			if (existsSync(filePath)) {
+				const compiled = await compileTailwindCSS(filePath)
+				if (compiled) {
+					return new Response(compiled, {
+						headers: { 'Content-Type': 'text/css' },
+					})
+				}
 				return serveStaticFile(filePath)
 			}
 		}
 
-		const indexHtml = readFileSync('./index.html', 'utf-8')
-		return new Response(indexHtml, {
+		// SPA fallback
+		return new Response(homepage, {
 			headers: { 'Content-Type': 'text/html' },
 		})
 	},
