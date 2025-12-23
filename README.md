@@ -2,6 +2,41 @@
 
 Template de monorepo TypeScript + Bun para aplicações web modernas.
 
+## Criando um Novo Projeto
+
+Este repositório é um template. Para criar um novo projeto a partir dele:
+
+```bash
+# 1. Clone o template
+git clone https://github.com/seu-usuario/stack-vdev.git meu-projeto
+cd meu-projeto
+
+# 2. Inicialize o projeto com seu nome
+bun new-project --name=meu-projeto --description="Descrição do projeto"
+```
+
+O script `new-project` automaticamente:
+- Renomeia o projeto em todos os arquivos relevantes:
+  - `package.json` (nome do workspace)
+  - `docker/docker-compose.yml` (containers e banco de dados)
+  - `.env.example` (DATABASE_URL)
+  - `apps/web/index.html` (título da página)
+  - `apps/web/src/pages/Home.tsx` (texto de boas-vindas)
+  - `apps/web/src/components/Layout.tsx` (header)
+  - `packages/email/src/templates/welcome.ts` (templates de email)
+- Converte o nome automaticamente para os formatos necessários:
+  - `meu-projeto` → kebab-case (package.json)
+  - `meu_projeto` → snake_case (docker, database)
+  - `Meu Projeto` → Title Case (UI, emails)
+- Remove o histórico git do template
+- Inicializa um novo repositório git
+- Copia `.env.example` para `.env`
+- Instala todas as dependências
+
+**Requisitos do nome:** deve ser kebab-case (letras minúsculas, números e hífens, começando com letra).
+
+Após a inicialização, configure suas variáveis de ambiente no `.env` e siga o Quick Start abaixo.
+
 ## Tech Stack
 
 - **Runtime/Bundler/Package Manager**: [Bun](https://bun.sh)
