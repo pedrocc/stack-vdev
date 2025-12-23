@@ -69,7 +69,7 @@ async function compileTailwindCSS(filePath: string): Promise<string | null> {
 	const stat = Bun.file(filePath)
 	const mtime = (await stat.stat()).mtime.getTime()
 
-	if (tailwindCache && tailwindCache.mtime === mtime) {
+	if (tailwindCache?.mtime === mtime) {
 		return tailwindCache.css
 	}
 
@@ -83,6 +83,7 @@ async function compileTailwindCSS(filePath: string): Promise<string | null> {
 	const exitCode = await proc.exited
 
 	if (exitCode !== 0) {
+		// biome-ignore lint/suspicious/noConsole: Error logging
 		console.error('Tailwind compilation error:', error)
 		return null
 	}
@@ -107,18 +108,52 @@ async function serveTypeScript(filePath: string): Promise<Response | null> {
 		},
 	})
 
-	if (result.success && result.outputs[0]) {
-		const code = await result.outputs[0].text()
-		const headers = new Headers()
-		headers.set('Content-Type', 'text/javascript')
-		headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
-		headers.set('Pragma', 'no-cache')
-		headers.set('Expires', '0')
-		return new Response(code, { headers })
+	if (!result.success || !result.outputs[0]) return null
+
+	const code = await result.outputs[0].text()
+	const headers = new Headers()
+	headers.set('Content-Type', 'text/javascript')
+	headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+	headers.set('Pragma', 'no-cache')
+	headers.set('Expires', '0')
+	return new Response(code, { headers })
+}
+
+// Handle .js imports by mapping to .ts/.tsx files
+async function handleJsImport(pathname: string): Promise<Response | null> {
+	const basePath = join('.', pathname.slice(0, -3))
+	const extensions = ['.tsx', '.ts']
+
+	for (const ext of extensions) {
+		const tsPath = basePath + ext
+		if (!existsSync(tsPath)) continue
+		const response = await serveTypeScript(tsPath)
+		if (response) return response
 	}
 	return null
 }
 
+// Handle CSS requests with Tailwind compilation
+async function handleCssRequest(pathname: string): Promise<Response | null> {
+	const filePath = join('.', pathname)
+	if (!existsSync(filePath)) return null
+
+	const compiled = await compileTailwindCSS(filePath)
+	if (compiled) {
+		return new Response(compiled, {
+			headers: { 'Content-Type': 'text/css' },
+		})
+	}
+	return serveStaticFile(filePath)
+}
+
+function serveHomepage(): Response {
+	return new Response(homepage, {
+		headers: { 'Content-Type': 'text/html' },
+	})
+}
+
+// biome-ignore lint/suspicious/noConsole: Startup info
 console.log(`🌐 Web server: http://localhost:${PORT}`)
 
 const _server = Bun.serve({
@@ -127,55 +162,30 @@ const _server = Bun.serve({
 		const url = new URL(req.url)
 		const pathname = url.pathname
 
-		// Serve index.html for root
-		if (pathname === '/') {
-			return new Response(homepage, {
-				headers: { 'Content-Type': 'text/html' },
-			})
-		}
+		if (pathname === '/') return serveHomepage()
 
 		if (pathname.startsWith('/api/') || pathname.startsWith('/health')) {
 			return proxyApiRequest(req, pathname, url.search)
 		}
 
 		const publicPath = join('./public', pathname)
-		if (pathname !== '/' && existsSync(publicPath)) {
-			return serveStaticFile(publicPath)
-		}
+		if (existsSync(publicPath)) return serveStaticFile(publicPath)
 
 		if (pathname.endsWith('.ts') || pathname.endsWith('.tsx')) {
 			const response = await serveTypeScript(join('.', pathname))
 			if (response) return response
 		}
 
-		// Handle .js imports by mapping to .ts/.tsx files
 		if (pathname.endsWith('.js')) {
-			const basePath = join('.', pathname.slice(0, -3))
-			for (const ext of ['.tsx', '.ts']) {
-				const tsPath = basePath + ext
-				if (existsSync(tsPath)) {
-					const response = await serveTypeScript(tsPath)
-					if (response) return response
-				}
-			}
+			const response = await handleJsImport(pathname)
+			if (response) return response
 		}
 
 		if (pathname.endsWith('.css')) {
-			const filePath = join('.', pathname)
-			if (existsSync(filePath)) {
-				const compiled = await compileTailwindCSS(filePath)
-				if (compiled) {
-					return new Response(compiled, {
-						headers: { 'Content-Type': 'text/css' },
-					})
-				}
-				return serveStaticFile(filePath)
-			}
+			const response = await handleCssRequest(pathname)
+			if (response) return response
 		}
 
-		// SPA fallback
-		return new Response(homepage, {
-			headers: { 'Content-Type': 'text/html' },
-		})
+		return serveHomepage()
 	},
 })

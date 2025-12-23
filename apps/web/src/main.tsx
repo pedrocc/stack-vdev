@@ -7,8 +7,8 @@ import { fetcher } from './lib/api.js'
 import './styles/globals.css'
 
 // Replaced at build time by Bun's define option
-declare const __CLERK_PUBLISHABLE_KEY__: string
-const CLERK_KEY = typeof __CLERK_PUBLISHABLE_KEY__ !== 'undefined' ? __CLERK_PUBLISHABLE_KEY__ : ''
+declare const __CLERK_PUBLISHABLE_KEY__: string | undefined
+const CLERK_KEY = __CLERK_PUBLISHABLE_KEY__ ?? ''
 
 if (!CLERK_KEY) {
 	throw new Error('Missing CLERK_PUBLISHABLE_KEY environment variable')

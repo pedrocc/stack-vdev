@@ -7,8 +7,8 @@ interface ClerkGlobal {
 }
 
 // Replaced at build time by Bun's define option
-declare const __API_URL__: string
-const API_URL = typeof __API_URL__ !== 'undefined' ? __API_URL__ : '/api'
+declare const __API_URL__: string | undefined
+const API_URL = __API_URL__ ?? '/api'
 
 export async function fetcher<T>(path: string): Promise<T> {
 	const token = await (globalThis as unknown as ClerkGlobal).Clerk?.session?.getToken()
