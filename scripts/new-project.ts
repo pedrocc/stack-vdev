@@ -24,7 +24,7 @@ if (!projectName || !/^[a-z][a-z0-9-]*$/.test(projectName)) {
 
 // Helper functions to convert name formats
 function toSnakeCase(name: string): string {
-	return name.replace(/-/g, '_')
+	return name.replaceAll('-', '_')
 }
 
 function toTitleCase(name: string): string {
