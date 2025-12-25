@@ -178,15 +178,48 @@ O projeto está configurado para deploy via **Railway** com GitHub Actions:
 Este repositório é um template. Para criar um novo projeto:
 
 ```bash
-# Clone o template
+# 1. Clone o template
 git clone https://github.com/seu-usuario/stack-vdev.git meu-projeto
 cd meu-projeto
 
-# Inicialize com seu nome
+# 2. Inicialize o projeto com seu nome
 bun new-project --name=meu-projeto --description="Descrição do projeto"
 ```
 
-O script automaticamente renomeia o projeto em todos os arquivos relevantes.
+### O que o script `new-project` faz
+
+O script automaticamente renomeia o projeto em todos os arquivos relevantes:
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `package.json` | Nome do workspace |
+| `docker/docker-compose.yml` | Containers e banco de dados |
+| `.env.example` | DATABASE_URL |
+| `apps/web/index.html` | Título da página |
+| `apps/web/src/pages/Home.tsx` | Texto de boas-vindas |
+| `apps/web/src/components/Layout.tsx` | Header |
+| `packages/email/src/templates/welcome.ts` | Templates de email |
+
+### Conversão automática de nomes
+
+O script converte o nome para os formatos necessários:
+
+| Input | Formato | Uso |
+|-------|---------|-----|
+| `meu-projeto` | kebab-case | package.json |
+| `meu_projeto` | snake_case | docker, database |
+| `Meu Projeto` | Title Case | UI, emails |
+
+### Outras ações do script
+
+- Remove o histórico git do template
+- Inicializa um novo repositório git
+- Copia `.env.example` para `.env`
+- Instala todas as dependências
+
+**Requisitos do nome:** deve ser kebab-case (letras minúsculas, números e hífens, começando com letra).
+
+Após a inicialização, configure suas variáveis de ambiente no `.env` e siga o Quick Start.
 
 ## Licença
 
