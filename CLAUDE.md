@@ -147,3 +147,16 @@ bun test --coverage
 ## Deploy
 Railway via GitHub Actions. Push para `main` = deploy automático.
 Dockerfiles usam `oven/bun:1-alpine` como base.
+
+## Checklist de Verificação
+
+Antes de fazer commit/PR, verifique:
+
+- [ ] `bun lint` passa sem erros
+- [ ] `bun typecheck` passa sem erros
+- [ ] `bun test` passa sem erros
+- [ ] `bun build` compila com sucesso
+- [ ] Código segue padrões TypeScript strict (sem `any`)
+- [ ] Inputs validados com Zod
+- [ ] Componentes usam shadcn/ui (tema Red, modo Light)
+- [ ] Não há dependências instaladas com npm/yarn
