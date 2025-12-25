@@ -1,6 +1,9 @@
 import { verifyToken } from '@clerk/backend'
+import { db, users } from '@repo/db'
+import { eq } from 'drizzle-orm'
 import type { Context } from 'hono'
 import { createMiddleware } from 'hono/factory'
+import { commonErrors, errorResponse } from '../lib/response.js'
 
 export type AuthVariables = {
 	userId: string
@@ -11,23 +14,14 @@ export const authMiddleware = createMiddleware<{ Variables: AuthVariables }>(asy
 	const authHeader = c.req.header('Authorization')
 
 	if (!authHeader?.startsWith('Bearer ')) {
-		return c.json(
-			{
-				success: false,
-				error: { code: 'UNAUTHORIZED', message: 'Missing or invalid authorization header' },
-			},
-			401
-		)
+		return commonErrors.unauthorized(c, 'Missing or invalid authorization header')
 	}
 
 	const token = authHeader.slice(7)
 
 	const secretKey = process.env['CLERK_SECRET_KEY']
 	if (!secretKey) {
-		return c.json(
-			{ success: false, error: { code: 'CONFIGURATION_ERROR', message: 'Server misconfigured' } },
-			500
-		)
+		return errorResponse(c, 'CONFIGURATION_ERROR', 'Server misconfigured', 500)
 	}
 
 	try {
@@ -40,10 +34,7 @@ export const authMiddleware = createMiddleware<{ Variables: AuthVariables }>(asy
 
 		await next()
 	} catch {
-		return c.json(
-			{ success: false, error: { code: 'UNAUTHORIZED', message: 'Invalid token' } },
-			401
-		)
+		return commonErrors.unauthorized(c, 'Invalid token')
 	}
 })
 
@@ -53,3 +44,17 @@ export function getAuth(c: Context<{ Variables: AuthVariables }>) {
 		sessionId: c.get('sessionId'),
 	}
 }
+
+export const requireAdmin = createMiddleware<{ Variables: AuthVariables }>(async (c, next) => {
+	const { userId } = getAuth(c)
+
+	const user = await db.query.users.findFirst({
+		where: eq(users.clerkId, userId),
+	})
+
+	if (!user || user.role !== 'admin') {
+		return commonErrors.forbidden(c, 'Admin access required')
+	}
+
+	await next()
+})

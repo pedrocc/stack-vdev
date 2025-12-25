@@ -26,7 +26,7 @@
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@types/bun": "latest",
-    "drizzle-kit": "^0.31.0",
+    "drizzle-kit": "^0.31.8",
     "typescript": "^5.8.0"
   }
 }

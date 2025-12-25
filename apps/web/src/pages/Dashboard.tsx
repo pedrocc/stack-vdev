@@ -1,10 +1,9 @@
 import { useUser } from '@clerk/clerk-react'
-import type { User } from '@repo/shared'
-import useSWR from 'swr'
+import { useCurrentUser } from '../lib/api-client.js'
 
 export function DashboardPage() {
 	const { user: clerkUser } = useUser()
-	const { data: user, error, isLoading } = useSWR<User>('/api/v1/users/me')
+	const { data: user, error, isLoading } = useCurrentUser()
 
 	if (isLoading) {
 		return (

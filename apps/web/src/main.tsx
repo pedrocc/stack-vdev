@@ -3,6 +3,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { SWRConfig } from 'swr'
 import { App } from './App.js'
+import { ErrorBoundary } from './components/ErrorBoundary.js'
 import { fetcher } from './lib/api.js'
 import './styles/globals.css'
 
@@ -22,10 +23,12 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
 	<StrictMode>
-		<ClerkProvider publishableKey={CLERK_KEY} afterSignOutUrl="/">
-			<SWRConfig value={{ fetcher, revalidateOnFocus: false }}>
-				<App />
-			</SWRConfig>
-		</ClerkProvider>
+		<ErrorBoundary>
+			<ClerkProvider publishableKey={CLERK_KEY} afterSignOutUrl="/">
+				<SWRConfig value={{ fetcher, revalidateOnFocus: false }}>
+					<App />
+				</SWRConfig>
+			</ClerkProvider>
+		</ErrorBoundary>
 	</StrictMode>
 )
