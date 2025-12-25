@@ -37,6 +37,28 @@ O script `new-project` automaticamente:
 
 Após a inicialização, configure suas variáveis de ambiente no `.env` e siga o Quick Start abaixo.
 
+## Quick Start
+
+```bash
+# 1. Instalar dependências
+bun install
+
+# 2. Iniciar containers (PostgreSQL + Redis)
+docker compose -f docker/docker-compose.yml up -d
+
+# 3. Configurar variáveis de ambiente
+cp .env.example .env
+# Edite .env com suas chaves (Clerk, Resend, etc.)
+
+# 4. Rodar migrations
+bun db:migrate
+
+# 5. Iniciar desenvolvimento
+bun dev
+```
+
+A API estará em `http://localhost:3000` e o frontend em `http://localhost:5173`.
+
 ## Tech Stack
 
 - **Runtime/Bundler/Package Manager**: [Bun](https://bun.sh)
@@ -72,28 +94,6 @@ stack_vdev/
 
 - [Bun](https://bun.sh) >= 1.0
 - [Docker](https://docker.com) (para PostgreSQL e Redis)
-
-## Quick Start
-
-```bash
-# 1. Instalar dependências
-bun install
-
-# 2. Iniciar containers (PostgreSQL + Redis)
-docker compose -f docker/docker-compose.yml up -d
-
-# 3. Configurar variáveis de ambiente
-cp .env.example .env
-# Edite .env com suas chaves (Clerk, Resend, etc.)
-
-# 4. Rodar migrations
-bun db:migrate
-
-# 5. Iniciar desenvolvimento
-bun dev
-```
-
-A API estará em `http://localhost:3000` e o frontend em `http://localhost:5173`.
 
 ## Comandos
 
