@@ -54,7 +54,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 						<div className="space-y-3">
 							<button
 								type="button"
-								onClick={() => window.location.reload()}
+								onClick={() => globalThis.location.reload()}
 								className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
 							>
 								Recarregar página
@@ -62,7 +62,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 							<button
 								type="button"
 								onClick={() => {
-									window.location.href = '/'
+									globalThis.location.href = '/'
 								}}
 								className="w-full bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors"
 							>
