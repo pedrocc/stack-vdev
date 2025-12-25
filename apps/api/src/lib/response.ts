@@ -25,7 +25,12 @@ export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse
 /**
  * Helper function to send a standardized success response
  */
-export function successResponse<T>(c: Context, data: T, status = 200, meta?: ApiSuccessResponse<T>['meta']) {
+export function successResponse<T>(
+	c: Context,
+	data: T,
+	status = 200,
+	meta?: ApiSuccessResponse<T>['meta']
+) {
 	const response: ApiSuccessResponse<T> = {
 		success: true,
 		data,

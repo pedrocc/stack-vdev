@@ -20,6 +20,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 	}
 
 	override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+		// biome-ignore lint/suspicious/noConsole: Error logging is appropriate in ErrorBoundary
 		console.error('Error caught by boundary:', error, errorInfo)
 	}
 
@@ -34,7 +35,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 								fill="none"
 								viewBox="0 0 24 24"
 								stroke="currentColor"
+								aria-label="Error icon"
 							>
+								<title>Error</title>
 								<path
 									strokeLinecap="round"
 									strokeLinejoin="round"
@@ -45,7 +48,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 						</div>
 						<h1 className="text-2xl font-bold text-gray-900 mb-4">Algo deu errado</h1>
 						<p className="text-gray-600 mb-6">
-							{this.state.error?.message || 'Ocorreu um erro inesperado. Por favor, tente novamente.'}
+							{this.state.error?.message ||
+								'Ocorreu um erro inesperado. Por favor, tente novamente.'}
 						</p>
 						<div className="space-y-3">
 							<button
@@ -57,7 +61,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 							</button>
 							<button
 								type="button"
-								onClick={() => (window.location.href = '/')}
+								onClick={() => {
+									window.location.href = '/'
+								}}
 								className="w-full bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors"
 							>
 								Voltar ao início

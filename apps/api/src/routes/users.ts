@@ -3,8 +3,8 @@ import { db, users } from '@repo/db'
 import { CreateUserSchema, PaginationSchema, UpdateUserSchema } from '@repo/shared'
 import { eq, sql } from 'drizzle-orm'
 import { Hono } from 'hono'
-import { type AuthVariables, authMiddleware, getAuth, requireAdmin } from '../middleware/auth.js'
 import { commonErrors, successResponse } from '../lib/response.js'
+import { type AuthVariables, authMiddleware, getAuth, requireAdmin } from '../middleware/auth.js'
 
 export const userRoutes = new Hono<{ Variables: AuthVariables }>()
 
