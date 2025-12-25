@@ -52,7 +52,7 @@ export const requireAdmin = createMiddleware<{ Variables: AuthVariables }>(async
 		where: eq(users.clerkId, userId),
 	})
 
-	if (!user || user.role !== 'admin') {
+	if (user?.role !== 'admin') {
 		return commonErrors.forbidden(c, 'Admin access required')
 	}
 
