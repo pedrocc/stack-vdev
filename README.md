@@ -1,71 +1,51 @@
 # Stack VDev
 
-Template de monorepo TypeScript + Bun para aplicações web modernas.
-
-## Criando um Novo Projeto
-
-Este repositório é um template. Para criar um novo projeto a partir dele:
-
-```bash
-# 1. Clone o template
-git clone https://github.com/seu-usuario/stack-vdev.git meu-projeto
-cd meu-projeto
-
-# 2. Inicialize o projeto com seu nome
-bun new-project --name=meu-projeto --description="Descrição do projeto"
-```
-
-O script `new-project` automaticamente:
-- Renomeia o projeto em todos os arquivos relevantes:
-  - `package.json` (nome do workspace)
-  - `docker/docker-compose.yml` (containers e banco de dados)
-  - `.env.example` (DATABASE_URL)
-  - `apps/web/index.html` (título da página)
-  - `apps/web/src/pages/Home.tsx` (texto de boas-vindas)
-  - `apps/web/src/components/Layout.tsx` (header)
-  - `packages/email/src/templates/welcome.ts` (templates de email)
-- Converte o nome automaticamente para os formatos necessários:
-  - `meu-projeto` → kebab-case (package.json)
-  - `meu_projeto` → snake_case (docker, database)
-  - `Meu Projeto` → Title Case (UI, emails)
-- Remove o histórico git do template
-- Inicializa um novo repositório git
-- Copia `.env.example` para `.env`
-- Instala todas as dependências
-
-**Requisitos do nome:** deve ser kebab-case (letras minúsculas, números e hífens, começando com letra).
-
-Após a inicialização, configure suas variáveis de ambiente no `.env` e siga o Quick Start abaixo.
+Template de monorepo **TypeScript + Bun** para aplicações web modernas com API REST e SPA.
 
 ## Tech Stack
 
-- **Runtime/Bundler/Package Manager**: [Bun](https://bun.sh)
-- **API**: [Hono](https://hono.dev) - Framework web ultrarrápido
-- **Frontend**: [React 19](https://react.dev) + [Wouter](https://github.com/molefrog/wouter) + [SWR](https://swr.vercel.app)
-- **Database**: [PostgreSQL](https://postgresql.org) + [Drizzle ORM](https://orm.drizzle.team)
-- **Cache/Queue**: [Redis](https://redis.io) + [BullMQ](https://bullmq.io)
-- **Auth**: [Clerk](https://clerk.com)
-- **Styling**: [Tailwind CSS 4](https://tailwindcss.com)
-- **Linting**: [Biome](https://biomejs.dev)
+| Camada | Tecnologia |
+|--------|------------|
+| **Runtime** | [Bun](https://bun.sh) |
+| **API** | [Hono](https://hono.dev) |
+| **Frontend** | [React 19](https://react.dev) + [Wouter](https://github.com/molefrog/wouter) + [SWR](https://swr.vercel.app) |
+| **UI** | [shadcn/ui](https://ui.shadcn.com) + [Tailwind CSS 4](https://tailwindcss.com) |
+| **Database** | [PostgreSQL](https://postgresql.org) + [Drizzle ORM](https://orm.drizzle.team) |
+| **Cache/Queue** | [Redis](https://redis.io) + [BullMQ](https://bullmq.io) |
+| **Auth** | [Clerk](https://clerk.com) |
+| **Email** | [Resend](https://resend.com) |
+| **Validação** | [Zod](https://zod.dev) |
+| **Linting** | [Biome](https://biomejs.dev) |
 
-## Estrutura
+## Estrutura do Projeto
 
 ```
-stack_vdev/
+stack-vdev/
 ├── apps/
-│   ├── api/          # Hono REST API
-│   └── web/          # React SPA
+│   ├── api/              # Hono REST API
+│   │   ├── src/
+│   │   │   ├── routes/   # Endpoints por domínio
+│   │   │   ├── middleware/  # Auth, rate-limit, error handling
+│   │   │   └── lib/      # Utilitários da API
+│   │   └── Dockerfile
+│   └── web/              # React SPA
+│       ├── src/
+│       │   ├── pages/    # Páginas da aplicação
+│       │   ├── components/  # Componentes React
+│       │   └── lib/      # API client, utils
+│       └── Dockerfile
 ├── packages/
-│   ├── shared/       # Schemas, tipos, utilitários
-│   ├── db/           # Drizzle ORM + migrations
-│   ├── ui/           # Componentes React
-│   ├── jobs/         # BullMQ queues/workers
-│   └── email/        # Templates de email (Resend)
+│   ├── shared/           # Schemas Zod, tipos, constantes
+│   ├── db/               # Drizzle ORM + migrations
+│   ├── ui/               # Componentes shadcn/ui
+│   ├── jobs/             # BullMQ queues/workers
+│   └── email/            # Templates de email (Resend)
 ├── tooling/
-│   ├── typescript/   # Configs TypeScript
-│   └── biome/        # Config Biome
-├── scripts/          # Scripts de desenvolvimento
-└── docker/           # Docker Compose
+│   ├── typescript/       # Configs TypeScript compartilhadas
+│   └── biome/            # Config Biome
+├── docker/               # Docker Compose (PostgreSQL + Redis)
+├── scripts/              # Scripts de desenvolvimento
+└── .github/workflows/    # CI/CD (GitHub Actions)
 ```
 
 ## Requisitos
@@ -86,33 +66,65 @@ docker compose -f docker/docker-compose.yml up -d
 cp .env.example .env
 # Edite .env com suas chaves (Clerk, Resend, etc.)
 
-# 4. Rodar migrations
+# 4. Rodar migrations e seeds
 bun db:migrate
+bun db:seed
 
 # 5. Iniciar desenvolvimento
 bun dev
 ```
 
-A API estará em `http://localhost:3000` e o frontend em `http://localhost:5173`.
+**URLs de desenvolvimento:**
+- API: `http://localhost:3000`
+- Web: `http://localhost:5173`
 
 ## Comandos
 
 | Comando | Descrição |
 |---------|-----------|
 | `bun dev` | Inicia API + Web em modo desenvolvimento |
-| `bun test` | Executa todos os testes |
 | `bun build` | Build de produção |
+| `bun test` | Executa todos os testes |
+| `bun test --coverage` | Testes com cobertura |
 | `bun lint` | Verifica lint com Biome |
+| `bun lint:fix` | Corrige problemas de lint automaticamente |
+| `bun format` | Formata código com Biome |
 | `bun typecheck` | Verifica tipos TypeScript |
-| `bun db:migrate` | Aplica migrations |
+| `bun db:migrate` | Aplica migrations do banco |
 | `bun db:seed` | Popula banco com dados de teste |
-| `bun db:studio` | Abre Drizzle Studio |
+| `bun db:studio` | Abre Drizzle Studio (GUI) |
 | `bun verify-clerk` | Valida configuração do Clerk |
 | `bun health-check` | Verifica status dos serviços |
 
-## Configuração
+## Funcionalidades
 
-### Variáveis de Ambiente
+### API (`apps/api`)
+
+- **Autenticação**: JWT via Clerk com middleware dedicado
+- **Rate Limiting**: 100 req/min (anônimo), 1000 req/min (autenticado)
+- **Roles**: Suporte a admin com `requireAdmin` middleware
+- **Respostas padronizadas**: Formato consistente com `success/error`
+- **Health check**: Endpoint `/health` para monitoramento
+- **Security headers**: Configurados via Hono middleware
+
+### Web (`apps/web`)
+
+- **Rotas protegidas**: Dashboard requer autenticação
+- **API Client tipado**: Integração com SWR para data fetching
+- **Error Boundary**: Tratamento global de erros
+- **Componentes shadcn/ui**: Tema Red, modo Light
+
+### Packages
+
+| Package | Descrição |
+|---------|-----------|
+| `@repo/shared` | Schemas Zod, tipos compartilhados, constantes |
+| `@repo/db` | Cliente Drizzle, schemas, migrations |
+| `@repo/ui` | Componentes React (shadcn/ui) |
+| `@repo/jobs` | Filas BullMQ (email, sync) |
+| `@repo/email` | Cliente Resend + templates |
+
+## Variáveis de Ambiente
 
 ```bash
 # Database
@@ -131,34 +143,50 @@ RESEND_API_KEY=re_...
 # URLs
 API_URL=http://localhost:3000
 WEB_URL=http://localhost:5173
+
+# Opcional
+SENTRY_DSN=https://...
 ```
 
-### Clerk
+## Configuração do Clerk
 
 1. Crie uma conta em [clerk.com](https://clerk.com)
 2. Crie um novo application
-3. Copie as chaves de API Keys para o `.env`
-4. Execute `bun verify-clerk` para validar
-
-## Testes
-
-```bash
-# Todos os testes
-bun test
-
-# Com coverage
-bun test --coverage
-
-# Arquivo específico
-bun test apps/api/src/middleware/auth.test.ts
-```
+3. Configure Microsoft Entra ID (opcional)
+4. Copie as chaves para o `.env`
+5. Execute `bun verify-clerk` para validar
 
 ## Deploy
 
-O projeto está configurado para deploy via Railway com GitHub Actions:
+O projeto está configurado para deploy via **Railway** com GitHub Actions:
 
-- Push para `main` = deploy automático
-- Dockerfiles otimizados em `apps/api/Dockerfile` e `apps/web/Dockerfile`
+- Push para `main` → deploy automático
+- Dockerfiles otimizados com multi-stage build
+- Base image: `oven/bun:1-alpine`
+- Web servida via Nginx
+
+### CI/CD Pipeline
+
+1. **Lint** - Biome check
+2. **Type Check** - TypeScript validation
+3. **Test** - Testes com PostgreSQL + Redis
+4. **Build** - Build de produção
+5. **Deploy** - Railway (apenas `main`)
+
+## Criando um Novo Projeto
+
+Este repositório é um template. Para criar um novo projeto:
+
+```bash
+# Clone o template
+git clone https://github.com/seu-usuario/stack-vdev.git meu-projeto
+cd meu-projeto
+
+# Inicialize com seu nome
+bun new-project --name=meu-projeto --description="Descrição do projeto"
+```
+
+O script automaticamente renomeia o projeto em todos os arquivos relevantes.
 
 ## Licença
 
